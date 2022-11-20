@@ -1,6 +1,9 @@
-from sqlalchemy import create_engine,Column,Integer,String,ForeignKey
+from sqlalchemy import create_engine,Column,Integer,String,ForeignKey,select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship,sessionmaker
+from ..model.game import Game
+from ..model.player import Player
+from ..model.vessel import Vessel
 
 engine = create_engine('sqlite:////tmp/tdlog.db', echo=True, future=True)
 Base = declarative_base(bind=engine)
@@ -63,11 +66,28 @@ class GameDao:
         self.db_session.add(game_entity)
         self.db_session.commit()
         return game_entity.id
+    def create_player(self,player:Player)->int:
+        player_entity = map_to_player_entity(player)
+        self.db_session.add(player_entity)
+        self.db_session.commit()
+        return game_player.id
+    def create_vessel(self,vessel:Vessel)->int:
+        game_entity=map_to_vessel_entity(vessel)
+        self.db_session.add(vessel_entity)
+        self.db_session.commit()
+        return vessel_entity.id
     def find_game(self, game_id: int) -> Game:
         stmt = select(GameEntity).where(GameEntity.id == game_id)
         game_entity = self.db_session.scalars(stmt).one()
         return map_to_game(game_entity)
-
+    def find_player(self, player_id: int) -> Player:
+        stmt=select(PlayerEntity).where(PlayerEntity.id==player_id)
+        player_entity = self.db_session.scalars(stmt).one()
+        return map_to_player(player_entity)
+    def find_vessel(self, vessel_id: int) -> Vessel:
+        stmt = select(VesselEntity).where(VesselEntity.id == vessel_id)
+        vessel_entity = self.db_session.scalars(stmt).one()
+        return map_to_vessel(vessel_entity)
     def map_to_game_entity(game: Game) -> GameEntity:
         game_entity = GameEntity()
         if game.get_id() is not None:
@@ -76,25 +96,18 @@ class GameDao:
             player_entity = PlayerEntity()
             player_entity.id = player.id
             player_entity.name = player.get_name()
-            battlefield_entity = map_to_battlefield_entity(
-                player.get_battlefield())
-            vessel_entities = \
-                map_to_vessel_entities(player.get_battlefield().id,
-                                       player.get_battlefield().vessels)
+            battlefield_entity = map_to_battlefield_entity(player.get_battlefield())
+            vessel_entities =\map_to_vessel_entities(player.get_battlefield().id,player.get_battlefield().vessels)
             battlefield_entity.vessels = vessel_entities
             player_entity.battle_field = battlefield_entity
             game_entity.players.append(player_entity)
         return game_entity
-
-    def map_to_vessel_entities(battlefield_id: int,vessels:list[Vessel]) \
-            -> list[VesselEntity]:
+    def map_to_vessel_entities(battlefield_id: int,vessels:list[Vessel])\-> list[VesselEntity]:
         vessel_entities: list[VesselEntity] = []
         for vessel in vessels:
             vessel_entity = map_to_vessel_entity(battlefield_id, vessel)
             vessel_entities.append(vessel_entity)
-
         return vessel_entities
-
     def map_to_vessel_entity(battlefield_id: int, vessel: Vessel) -> VesselEntity:
         vessel_entity = VesselEntity()
         weapon_entity = WeaponEntity()
@@ -111,15 +124,12 @@ class GameDao:
         vessel_entity.coord_z = vessel.coordinates[2]
         vessel_entity.battle_field_id = battlefield_id
         return vessel_entity
-
     def map_to_player_entity(player: Player) -> PlayerEntity:
         player_entity = PlayerEntity()
         player_entity.id = player.id
         player_entity.name = player.name
-        player_entity.battle_field = map_to_battlefield_entity(
-            player.get_battlefield())
+        player_entity.battle_field = map_to_battlefield_entity(player.get_battlefield())
         return player_entity
-
     def map_to_battlefield_entity(battlefield: Battlefield) -> BattlefieldEntity:
         battlefield_entity = BattlefieldEntity()
         battlefield_entity.id = battlefield.id
@@ -132,3 +142,14 @@ class GameDao:
         battlefield_entity.max_power = battlefield.max_power
         return battlefield_entity
 
+    def map_to_game(game_entity: GameEntity) -> game:
+
+        return
+
+    def map_to_player(player_entity: PlayerEntity) -> player:
+
+        return
+
+    def map_to_vessel(vessel_entity: VesselEntity) -> vessel:
+
+        return
