@@ -15,6 +15,5 @@ class Game:
 
     def add_player(self, player: Player):
         if len(self.players) >= 2:
-            raise GameFullError(
-                "Seulement 2 joueurs sont admis dans la partie !")
+            raise GameFullError("Seulement 2 joueurs sont admis dans la partie !")
         self.players.append(player)
