@@ -34,7 +34,7 @@ class  BattleFieldEntity(Base):
      max_z = Column(Integer)
      max_power = Column(Integer)
      player_id = Column(Integer, ForeignKey("player.id"), nullable=False)
-     player = relationship("playerEntity", back_populates="BattleField")
+     player = relationship("playerEntity", back_populates="battle_field")
      Vessels = relationship("VesselEntity",back_populates="BattleField", uselist=False, cascade="all, delete-orphan")
 
 class VesselEntity(Base):
@@ -46,8 +46,8 @@ class VesselEntity(Base):
     hits_to_be_destroyed = Column(Integer)
     type = Column(String)
     battle_field_id = Column(Integer, ForeignKey("battle_field.id"), nullable=False)
-    battle_field = relationship("BattlefieldEntity",back_populates="Vessels",uselist=False, cascade="all, delete-orphan")
-    weapans = relationship("weapansEntity",back_populates="Vessel",uselist=False, cascade="all, delete-orphan")
+    battlefield=relationship("BattlefieldEntity",back_populates="Vessels")
+    weapans=relationship("weapansEntity",back_populates="Vessel",uselist=False, cascade="all, delete-orphan")
 
 class WeaponEntity(Base):
     __tablename__ = 'Weapon'
@@ -56,7 +56,7 @@ class WeaponEntity(Base):
     range = Column(Integer, nullable=False)
     type = Column(String)
     Vessel_id = Column(Integer, ForeignKey("Vessel.id"), nullable=False)
-    Vessel= relationship("VesselEntity",back_populates="weapans",uselist=False, cascade="all, delete-orphan")
+    Vessel=relationship("VesselEntity",back_populates="weapans")
 
 class GameDao:
     def __init__(self):
@@ -81,8 +81,8 @@ class GameDao:
         stmt = select(GameEntity).where(GameEntity.id == game_id)
         game_entity = self.db_session.scalars(stmt).one()
         return self.map_to_game(game_entity)
-    def find_player(self, player_id: int) -> Player:
-        stmt=select(PlayerEntity).where(PlayerEntity.id==player_id)
+    def find_player(self, player_name: int) -> Player:
+        stmt=select(PlayerEntity).where(PlayerEntity.name==player_name)
         player_entity = self.db_session.scalars(stmt).one()
         return self.map_to_player(player_entity)
     def find_vessel(self, vessel_id: int) -> Vessel:
@@ -97,7 +97,7 @@ class GameDao:
             player_entity = PlayerEntity()
             player_entity.id = player.id
             player_entity.name = player.get_name()
-            battlefield_entity = map_to_battlefield_entity(player.get_battlefield())
+            battlefield_entity = self.map_to_battlefield_entity(player.get_battlefield())
             vessel_entities=self.map_to_vessel_entities(player.get_battlefield().id,player.get_battlefield().vessels)
             battlefield_entity.vessels = vessel_entities
             player_entity.battle_field = battlefield_entity

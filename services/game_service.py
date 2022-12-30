@@ -14,30 +14,26 @@ class GameService:
         return self.game_dao.create_game(game)
     def join_game(self, game_id: int, player_name: str) -> bool:
         game=self.game_dao.find_game(game_id)
-        game.add_player(player_name)
-        if player_name in game.get_players():
+        player=self.game_dao.find_player(player_name)
+        game.add_player(player)
+        if player in game.get_players():
             return True
         else:
             return False
     def get_game(self, game_id: int) -> Game:
         game=self.game_dao.find_game(game_id)
         print(f"{game_id} de joueurs {game.get_players()}")
-    def add_vessel(self, game_id: int, player_name: str, vessel_type: str,x: int, y: int, z: int) -> bool:
-        vessel = vessel_type(x, y, z)
-        game = self.game_dao.find_game(game_id)
-        for player in game.get_players():
-            if player.get_name() == player_name:
-                player.get_battlefield().add_vessel(vessel)
-                if vessel in player.get_battlefield().get_vessels():
-                    stmt = select(PlayerEntity).where(
-                        PlayerEntity.name == player_name and PlayerEntity.game_id == game_id)
-                    player_entity = self.db_session.scalars(stmt).one()
-                    stmt = select(Battlefield).where(Battlefield.player_id == player_entity.id)
-                    battlefield_entity = self.db_session.scalars(stmt).one()
-                    self.game_dao.create_vessel(battlefield_entity.id, vessel)
-                    return True
-                else:
-                    return False
+    def add_vessel(self, game_id: int, player_name: str, vessel_Id: str,x: int, y: int, z: int) -> bool:
+        # j'ai changé vessel_type en vessel_Id pour pouvoir faire correspondre à la façon dont j'ai défini find_vessel
+        game=self.game_dao.find_game(game_id)
+        player = self.game_dao.find_player(player_name)
+        vessel = self.game_dao.find_game(vessel_Id)
+        vessel.coordinates=x,y,z
+        player.get_battlefield().add_vessel(vessel)
+        if vessel in player.get_battlefield().get_vessels():
+            return True
+        else:
+            return False
     def shoot_at(self, game_id: int, shooter_name: str, vessel_id: int, x: int, y: int, z: int) -> bool:
         vessel = self.game_dao.find_vessel(vessel_id)
         game = self.game_dao.find_game(game_id)
@@ -48,9 +44,7 @@ class GameService:
             for player in game.get_players():
                 if player.get_name() != shooter_name:
                     if player.get_battlefield().fired_at(x, y, z):
-                        stmt = VesselEntity.update().where(VesselEntity.coord_x == x, VesselEntity.coord_y == y,
-                                                           VesselEntity.coord_z == z).values(
-                            {VesselEntity.hits_to_be_destroyed: VesselEntity.hits_to_be_destroyed - 1})
+                        stmt = VesselEntity.update().where(VesselEntity.coord_x == x, VesselEntity.coord_y == y, VesselEntity.coord_z == z).values({VesselEntity.hits_to_be_destroyed: VesselEntity.hits_to_be_destroyed - 1})
                         self.db_session.scalars(stmt).one()
                         return True
                     return False

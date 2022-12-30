@@ -21,7 +21,6 @@ async def create_game(game_data: CreateGameData):
 async def get_game(game_id: int) -> Game:
         return game_service.get_game(game_id)
 
-
 class JoinGameData(BaseModel):
      game_id: int
      player_name: str
